@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+        <meta charset="utf-8">
+        <meta http-equiv="pragma" content="no-cache">
+        <!-- HTTP 1.0 -->
+        <meta http-equiv="cache-control" content="no-cache">
+        <!-- Prevent caching at the proxy server -->
+        <meta http-equiv="expires" content="0">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title>评价详情</title>
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" type="text/css" href="../css/icons-extra.css" />
+		<link href="../css/common.css" rel="stylesheet"  />
+		<style>
+			div.mui-row {
+				text-align: center;
+				/*margin-bottom: -10px;*/
+			}
+            .field-contain label {
+                width: auto;
+                padding-right: 0;
+            }
+            .field-contain input[type='text']{
+                width: 40px;
+                height: 30px;
+                padding: 5px 0;
+                float: none;
+                text-align: center;
+            }
+            .mui-input-range .mui-tooltip{
+                font-size:24px;
+             }
+
+		</style>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+			<div class="mui-row">
+				<div class="mui-col-sm-2 mui-col-xs-2">
+					<span class="vam mui-icon mui-icon-back mui-action-back"></span>
+					<span class="vam mf5 mui-action-back">返回</span>
+				</div>
+				<div class="mui-col-sm-9 mui-col-xs-7">
+					<h1 class="mui-title"> 人员评价 </h1>
+				</div>
+			</div>
+		</header>
+		<div class="mui-content">
+			<ul class="mui-table-view first-task-ul"></ul>
+
+			<ul class="mui-table-view">
+				<li class="mui-table-view-cell" style="background: #d9d9dc">评价人员</li>
+				<li class="mui-table-view-cell">
+					<div class="mui-row">
+						<div class="mui-col-sm-12 mui-col-xs-12" id="evaluateUser">--</div>
+					</div>
+				</li>
+			</ul>
+
+			<ul class="mui-table-view" id="useridLIst">
+				<li class="mui-table-view-cell" style="background: #d9d9dc">对应任务预警信息</li>
+				<!-- <li class="mui-table-view-cell">
+					<div class="mui-row">
+						<div class="mui-col-sm-12 mui-col-xs-12">没有戴安全帽</div>
+				    </div>
+				</li> -->
+			</ul>
+			<ul class="mui-table-view">
+				<li class="mui-table-view-cell" style="background: #d9d9dc">评价</li>
+				<li class="mui-table-view-cell">
+                    <div class="mui-input-row mui-input-range field-contain" style="margin-top: 60px">
+                        <div style="float:left">
+                            <label >评分：</label>
+                            <input type="text" id='field-range-input' value='0' style="font-size:14px">
+                        </div>
+                        <div style="margin-left:121px;">
+                            <input type="range" id='field-range' value="0" min="0" max="10"/>
+                        </div>
+                    </div>
+                </li>
+				<li class="mui-table-view-cell">
+					<div class="mui-row">
+                        <div class="mui-col-sm-2 mui-col-xs-2">评语:</div>
+						<div class="mui-col-sm-12 mui-col-xs-12">
+							<textarea id="evInfo" cols="30" rows="8" placeholder="评语..." style="font-size: 14px"></textarea>
+						</div>
+					</div>
+				</li>
+			</ul>
+			<div class="rec-btn">
+				<button type="button" id="isSure" data-loading-text="提交中..." data-loading-icon="mui-spinner mui-spinner-custom" class="mui-btn mui-btn-primary">
+                    提交评价
+                </button>
+			</div>
+		</div>
+        <script src="../js/mui.min.js"></script>
+        <script src="../js/common.js"></script>
+		<script src="../js/jquery.min.js"></script>
+		<script src="../js/addbottom.js"></script>
+		<script type="text/javascript" charset="utf-8">
+
+            getDetailAfter();
+            var workEvaluate = JSON.parse(localStorage.getItem('workEvaluate')); //获取缓存信息
+			$('#evaluateUser').text(workEvaluate.userId);
+
+            /*根据指定作业人员获取对应的预警信息*/
+            mui.ajax(httpUrl+'/task/getWaringReception',{
+                data:{
+                    num:GetQueryString('num'),
+                    userId:workEvaluate.userId,
+                    queryType:'person',
+                },
+                dataType:'json',//服务器返回json格式数据
+                type:'post',//HTTP请求类型
+                timeout:10000,//超时时间设置为10秒；
+                headers:{'Content-Type':'application/json'},
+                success:function(res){
+                    if(res.code === 0){
+                        var curData = res.data.data || [];
+                        var strli = ''
+                        if(curData.length >0){
+                            for(var i = 0;i<curData.length;i++){
+                                strli+='<li class="mui-table-view-cell">'+
+                                    '<div class="mui-row">'+
+                                        '<div class="mui-col-sm-12 mui-col-xs-12">'+curData[i].record.message +'</div>'+
+                                    '</div>'+
+                                '</li>'
+                            }
+                            $('#useridLIst').append(strli)
+                        }else{
+                            $('#useridLIst').append('<li class="mui-table-view-cell">无对应用户预警信息</li>')
+                        }
+
+                    }
+                },
+                error:function(xhr,type,errorThrown) {
+                    //异常处理；
+                    console.log(type);
+                }
+            });
+
+
+            document.getElementById('isSure').addEventListener('tap', function() {
+                var score = mui('#field-range-input')[0].value;
+                var comment = mui('#evInfo')[0].value;
+                if(score < 7) {
+                    if (isEmpty(comment) === true) {
+                        mui.toast('低于6分必须给出评语!');
+                        return;
+                    }
+                }
+                mui.confirm( userInfo.name +'，您于' + getNowDate() + '在'+taskName+'中对'+workEvaluate.userId+'进行评分'+score+'分，您确定吗？','',['确定','取消'],function(a){
+                    if (a.index === 0) {
+                        //获取作业问题描述
+                        mui.ajax(httpUrl+'/task/evaluate',{
+                            data:{
+                                username:userInfo.username,
+                                name:userInfo.name,
+                                userId:workEvaluate.userId,
+                                num:GetQueryString('num'),
+                                gps: nowlocation,
+                                score:score,
+	                            content:comment
+                            },
+                            dataType:'json',//服务器返回json格式数据
+                            type:'post',//HTTP请求类型
+                            timeout:10000,//超时时间设置为10秒；
+                            headers:{'Content-Type':'application/json'},
+                            success:function(res){
+                                if(res.code === 0){
+                                    mui.openWindow({
+                                        url: `workEvaluate.html?num=${GetQueryString('num')}`, /*作业评价*/
+                                        createNew: true,
+                                        styles: {
+                                            cachemode:"noCache",
+                                        }
+                                    });
+                                }
+                            },
+                            error:function(xhr,type,errorThrown){
+                                //异常处理；
+                                console.log(type);
+                            }
+                        });
+                    } else if (a.index === 1 ) {
+
+                    }
+                })
+
+            });
+
+
+            //监听input事件，获取range的value值，也可以直接element.value获取该range的值
+            var rangeList = document.querySelectorAll('input[type="range"]');
+            for(var i=0,len=rangeList.length;i<len;i++){
+                rangeList[i].addEventListener('input',function(){
+                    if(this.id.indexOf('field')>=0){
+                        document.getElementById(this.id+'-input').value = this.value;
+                    }else{
+                        document.getElementById(this.id+'-val').innerHTML = this.value;
+                    }
+                });
+            }
+
+            document.getElementById('field-range-input').addEventListener('input',function(){
+                document.getElementById('field-range').value = this.value ;
+            });
+
+            function isEmpty(obj){
+                if(typeof obj == "undefined" || obj == null || obj == ""){
+                    return true;
+                }else{
+                    return false;
+                }
+            }
+
+		</script>
+	</body>
+
+</html>

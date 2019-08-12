@@ -1,0 +1,141 @@
+* {
+    margin:0;
+    padding:0;
+}
+body{
+    font-size: 14px;
+}
+	/*header-css*/
+#return {
+    width: 32px;
+    margin-top: 14px;
+}
+.mui-table-view{
+    margin-top:10px;
+}
+.mui-bar .mui-title {
+	font-size: 17px;
+	font-weight: 600;
+}
+.vam{
+    vertical-align: middle;
+}
+.mf5{
+    margin-left: -5px;
+}
+h1.mui-title {
+	color: dodgerblue;
+}
+
+div.user {
+	margin-top: 10px;
+    text-align: right;
+    font-size: 13px;
+}
+span.username {
+	font-weight: 500;
+	color: dodgerblue;
+}
+
+	/*body-css*/
+.mui-content {
+    padding: 12px;
+}
+.mui-bar-nav~.mui-content{
+    padding-bottom: 60px;
+}
+.mui-table-view {
+    margin-bottom: 10px;
+}
+div.ai-png {
+    font-size: 15px;
+}
+.ai-png-title{
+    width:98%;
+    text-align: center;
+    margin: 0 auto;
+}
+img.commonPng {
+	margin-top: 10px;
+	margin-bottom: 10px;
+	background:#000;
+    border:1px solid #fff;
+    border-width:5px 5px 5px 5px;
+    box-shadow:1px 1px 5px #333;
+    -webkit-box-shadow:1px 1px 5px #333;
+    -moz-box-shadow:1px 1px 5px #333;
+    width: 65%;
+}
+
+img.camrea {
+    /*width: 32px;*/
+    /*vertical-align: middle;*/
+    display: none;
+}
+
+.rec-btn{
+    margin-top:20px;
+    text-align:center;
+}
+
+.rec-btn button{
+    width: 100%;
+}
+
+.mui-checkbox{
+    display: inline-block;
+}
+
+#description{
+    line-height: 21px;
+    width: 100%;
+    max-height: 200px;
+    overflow: auto;
+    padding: 5px 15px;
+    -webkit-user-select: text;
+    /* border: 1px solid rgba(0,0,0,.2); */
+    background-color: #fff;
+}
+
+#backList{
+    color:#151414;
+}
+#logout{
+   color:#d81e06;
+}
+
+.mui-checkbox input[type=checkbox]:before, .mui-radio input[type=radio]:before{
+    font-size:22px;
+}
+.mui-checkbox input[type=checkbox], .mui-radio input[type=radio]{
+    top: 8px;
+}
+.mui-search .mui-placeholder{
+    font-size:14px;
+}
+.data-zuoye-task .data-zuoye-tasktitle{
+    margin-left: 16px;
+}
+.data-zuoye-taskone{
+    margin-left: 40px; margin-bottom: 5px; 
+}
+.data-zuoye-tasklast{
+    margin-left: 40px; margin-bottom: 10px; 
+    padding-bottom:5px;   
+    border-bottom: 1px solid #c8c7cc;
+}
+.data-zuoye-b{
+   color: #403f3f;
+}
+
+.img{
+    width: 100%;
+    margin: 10px 0;
+    text-align: center;
+    padding: 10px;
+    background: #fff;
+}
+.img img{
+    width: 48%;
+    margin-left: 2%;
+}

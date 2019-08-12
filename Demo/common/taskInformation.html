@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<meta http-equiv="pragma" content="no-cache">
+		<!-- HTTP 1.0 -->
+		<meta http-equiv="cache-control" content="no-cache">
+		<!-- Prevent caching at the proxy server -->
+		<meta http-equiv="expires" content="0">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title>任务进度</title>
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" type="text/css" href="../css/icons-extra.css" />
+		<link href="../css/common.css" rel="stylesheet"  />
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+			<div class="mui-row">	
+				<div class="mui-col-sm-2 mui-col-xs-2" id="topBackList">
+                    <span class="vam mui-icon mui-icon-back "></span>
+                    <span class="vam mf5 ">返回</span>
+                </div>
+				<div class="mui-col-sm-9 mui-col-xs-7">
+					<h1 class="mui-title"> 任务进度 </h1>
+				</div>
+			</div>
+		</header>
+		<div class="mui-content">
+			<ul class="mui-table-view first-task-ul" >
+			</ul>
+			<ul class="mui-table-view" id="taskcommon">
+				<li class="mui-table-view-cell" style="background:#d9d9dc">任务进度</li>
+			</ul>
+		</div>
+		<script src="../js/mui.min.js"></script>
+		<script src="../js/common.js"></script>
+		<script src="../js/jquery.min.js"></script>
+		<script src="../js/addbottom.js"></script>
+		<script type="text/javascript">
+				getDetail()
+		      	var userArray ={
+					'qianfaren':'签发人',
+					'fuzeren':'负责人',
+					'xukeren':'许可人',
+				
+				}//全部状态
+				mui.ajax(httpUrl+'/task/getAttachments',{
+						data:{
+							num: num,
+						},
+						dataType:'json',//服务器返回json格式数据
+						type:'post',//HTTP请求类型
+						timeout:10000,//超时时间设置为10秒；
+						headers:{'Content-Type':'application/json'},	              
+						success:function(res){
+							if(res.code == 0){
+								var datali = res.data || []
+								if(datali.length>0){
+									var strli = ''
+									for(var i =0;i<datali.length;i++){
+										strli+='<li class="mui-table-view-cell" >'+datali[i].record.event+'</li>'+
+										'<li class="mui-table-view-cell" style="text-indent:28px"> '+userArray[datali[i].record.username]+' 于 '+datali[i].record.signTime+' 确认</li>'
+									}
+									$('#taskcommon').append(strli)
+								}else{
+									$('#taskcommon').append('<li class="mui-table-view-cell" >暂无数据</li>')
+								}
+							}
+						},
+						error:function(xhr,type,errorThrown){
+							//异常处理；
+							console.log(type);
+						}
+			});
+		</script>
+	</body>
+
+</html>

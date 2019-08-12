@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+        <meta charset="utf-8">
+        <meta http-equiv="pragma" content="no-cache">
+        <!-- HTTP 1.0 -->
+        <meta http-equiv="cache-control" content="no-cache">
+        <!-- Prevent caching at the proxy server -->
+        <meta http-equiv="expires" content="0">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title>准备结束详情页</title>
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" type="text/css" href="../css/icons-extra.css" />
+		<link href="../css/common.css" rel="stylesheet"  />
+		<link href="../css/previewImage.css" rel="stylesheet"  />
+		<style>
+			div.mui-row {
+				text-align: center;
+				padding: 5px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+			<div class="mui-row">
+				<div class="mui-col-sm-2 mui-col-xs-2">
+					<span class="vam mui-icon mui-icon-back mui-action-back"></span>
+					<span class="vam mf5 mui-action-back">返回</span>
+				</div>
+				<div class="mui-col-sm-9 mui-col-xs-7">
+					<h1 class="mui-title">预警信息详情 </h1>
+				</div>
+			</div>
+		</header>
+		<div class="mui-content">
+			<ul class="mui-table-view first-task-ul"></ul>
+			<ul class="mui-table-view">
+				<li class="mui-table-view-cell" style="background:#d9d9dc">预警信息</li>
+				<!--<li class="mui-table-view-cell">用户:--</li>-->
+				<li class="mui-table-view-cell waringNum">告警编号:--</li>
+				<li class="mui-table-view-cell time">时间:--</li>
+				<li class="mui-table-view-cell workFile">工作区域:--</li>
+				<li class="mui-table-view-cell warnLevel">预警:预警信息</li>
+				<li class="mui-table-view-cell">预警照片:</li>
+				<li class="mui-table-view-cell warningPic">
+					<!--<img src="../image/add.png">-->
+				</li>
+			</ul>
+
+			<div class="rec-btn">
+				<button id="isSure" type="button" data-loading-text="确认中..." data-loading-icon="mui-spinner mui-spinner-custom" class="mui-btn mui-btn-primary">
+					确认预警已处理
+				</button>
+			</div>
+
+		</div>
+        <script src="../js/mui.min.js"></script>
+        <script src="../js/common.js"></script>
+        <script src="../js/mui.zoom.js"></script>
+		<script src="../js/jquery.min.js"></script>
+		<script src="../js/mui.previewimage.js"></script>
+		<script src="../js/addbottom.js"></script>
+		<script type="text/javascript" charset="utf-8">
+            mui.previewImage();
+            getDetailAfter();
+            var warnDetail = JSON.parse(localStorage.getItem('warnDetail')); //获取缓存信息
+            mui.ajax(httpUrl+'/task/getOneWaringReception',{
+                data:{
+                    waringNum:warnDetail.waringNum,
+                    //username:warnDetail.username,
+                    gps: nowlocation,
+                },
+                dataType:'json',//服务器返回json格式数据
+                type:'post',//HTTP请求类型
+                timeout:10000,//超时时间设置为10秒；
+                headers:{'Content-Type':'application/json'},
+                success:function(res){
+                    if(res.code === 0){
+                        var curData = res.data;
+                        if(curData.status == '1'){
+                            $('#isSure').attr('disabled',true); 
+                        }
+                        else{
+                            $('#isSure').attr('disabled',false);
+                        }
+                        //$('.user').text('用户:' + curData.userid);
+                        $('.waringNum').text('告警编号：' + curData.waringNum);
+                        $('.workFile').text('工作区域：' + curData.areaName);
+                        $('.time').text('时间：'+ getMyDate(curData.time));
+                        $('.warnLevel').html('预警：' + curData.message) ;
+                        $('.warningPic').html('<img src='+curData.screenshotUrl.replace(/\r\n/g,'')+' width=50% data-preview-src="" data-preview-group="1">');
+                    }
+                },
+                error:function(xhr,type,errorThrown) {
+                    //异常处理；
+                    console.log(type);
+                }
+            });
+
+            document.getElementById('isSure').addEventListener('tap', function() {
+                mui.confirm( userInfo.name +'，您于' + getNowDate() + '确认'+taskName+'任务预警已处理，您确定吗？','',['确定','取消'],function(a){
+                    if (a.index === 0) {
+                        mui.ajax(httpUrl+'/task/updateWaringReception',{
+                            data:{
+                                waringNum:warnDetail.waringNum,
+                                username:userInfo.username,
+                                gps: nowlocation,
+                            },
+                            dataType:'json',//服务器返回json格式数据
+                            type:'post',//HTTP请求类型
+                            timeout:10000,//超时时间设置为10秒；
+                            headers:{'Content-Type':'application/json'},
+                            success:function(res){
+                                if(res.code === 0){
+                                    mui.openWindow({
+                                        url: `AIEndRemind.html?num=${GetQueryString('num')}`, /*作业准备结束页*/
+                                        createNew: true,
+                                        styles: {
+                                            cachemode:"noCache",
+                                        }
+                                    });
+                                }
+                            },
+                            error:function(xhr,type,errorThrown){
+                                //异常处理；
+                                console.log(type);
+                            }
+                        });
+
+                    } else if (a.index === 1 ) {
+
+                    }
+                })
+            });
+
+
+		</script>
+	</body>
+
+</html>

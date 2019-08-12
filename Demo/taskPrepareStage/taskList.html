@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">		
+		<!-- HTTP 1.1 -->
+		<meta http-equiv="pragma" content="no-cache">
+		<!-- HTTP 1.0 -->
+		<meta http-equiv="cache-control" content="no-cache">
+		<!-- Prevent caching at the proxy server -->
+		<meta http-equiv="expires" content="0">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title>任务大厅</title>
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" type="text/css" href="../css/icons-extra.css" />
+		<link href="../css/common.css" rel="stylesheet"  />
+		<style>
+			.user .mui-btn{
+				top: 0px;
+                padding: 5px 10px 5px;
+			}
+
+			.mui-search{
+				margin-top:20px;
+			}
+			.mui-search:before{
+				margin-top: -10px;
+			}
+			.mui-search input[type=search]{
+				margin-bottom:0px;
+			}
+			.task-li{
+				width:calc(100% - 105px);
+				display: inline-block;
+				text-overflow: ellipsis;
+                overflow: hidden;
+                white-space: nowrap;
+			}
+			.task-list{
+				height:100%;
+				overflow:auto;
+			}
+			.mui-scroll-wrapper{
+				top:250px;
+				height: calc(100% - 302px);
+			}
+			.taskListall{
+				top:210px;
+			}
+			.mui-bar-nav~.mui-content .mui-pull-top-pocket{
+				top:0px;
+			}
+			.mui-content .mui-table-view{
+				margin-top:0;
+			}
+			.mui-scroll{
+				padding:0 12px;
+			}
+			.task-tab{
+				margin-top:10px;
+				height: 40px;
+				line-height: 40px;
+				background: rgba(0,0,0,.1);
+				border: 1px solid #cecece;
+				border-radius: 3px;
+			}
+			.task-tab span{
+				border-right: 1px solid #cecece;
+				text-align: center;
+			}
+			.task-tab span.last-tab{
+				border:none !important;
+			}
+			#taskListall.mui-table-view:before,#taskListall.mui-table-view:after{
+				height:0;
+			}
+			.mui-navigate-right:after, .mui-push-left:after, .mui-push-right:after{
+				color:#111
+			}
+		</style>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+			<h1 class="mui-title"> 任务大厅 </h1>
+		</header>
+		<div class="mui-content">
+			<div class="mui-input-row mui-search">
+				<input id="search" type="search" placeholder="任务名称">
+			</div>
+			<div class="tabs-list">
+				<div class="task-tab mui-row">
+					<span class="mui-col-sm-4 mui-col-xs-4" id="task2">正在执行 <b  id="count2" style="color:#f53d3d;"></b></span>
+					<span class="mui-col-sm-4 mui-col-xs-4 " id="task1">待确认 <b id="count1" style="color:#f53d3d;"></b></span>
+					<span class="mui-col-sm-4 mui-col-xs-4 " id="task3">已结束 <b  id="count3" style="color:#f53d3d;"></b></span>
+				</div>
+				<div id="refreshContainer" class=" mui-scroll-wrapper">
+					<div class="mui-scroll task-list">
+						<ul class="mui-table-view"  id="taskList2">
+						</ul>
+						<ul class="mui-table-view" id="taskList"  style="display:none">
+						</ul>
+						<ul class="mui-table-view" id="taskList3"  style="display:none">
+						</ul>
+					</div>
+				</div>
+			</div>
+			<div class=" mui-scroll-wrapper taskListall">
+				<div class="mui-scroll task-list">
+					<ul class="mui-table-view" id="taskListall">
+					</ul>
+				</div>
+			</div>
+		</div>
+		<nav class="mui-bar mui-bar-tab">
+			<a class="mui-tab-item" id="logout"><img class="mui-icon" style="width:16px;height:16px;margin-top: 5px;"  src="../image/logout.png" alt=""><span class="mui-tab-label">退出登录</span></a>
+		</nav>
+		<script src="../js/mui.min.js"></script>
+		<script src="../js/jquery.min.js"></script>
+        <script src="../js/common.js"></script>
+		<script type="text/javascript" charset="utf-8">
+				mui.init({
+					swipeBack:true, //启用右滑关闭功能
+					preloadPages:[
+					  mui('#search')[0].value = '',
+					],//预加载
+					pullRefresh:{
+                        container:"#refreshContainer",//下拉刷新容器标识，querySelector能定位的css选择器均可，比如：id、.class等
+                        down : {
+                          height:50,//可选,默认50.触发下拉刷新拖动距离,
+                          auto: false,//可选,默认false.首次加载自动下拉刷新一次
+                          contentdown : "下拉可以刷新",//可选，在下拉可刷新状态时，下拉刷新控件上显示的标题内容
+                          contentover : "释放立即刷新",//可选，在释放可刷新状态时，下拉刷新控件上显示的标题内容
+                          contentrefresh : "正在刷新...",//可选，正在刷新状态时，下拉刷新控件上显示的标题内容
+                          callback:pullDownfresh //必选，刷新函数，根据具体业务来编写，比如通过ajax从服务器获取新数据；
+					    },
+                    }
+				});
+				mui('#search')[0].value = '';
+				var taskList = []//全部列表
+				mui('#taskListall')[0].innerHTML = ''
+				mui('.taskListall')[0].style.display= 'none';
+				mui('#task2')[0]['style'].backgroundColor = '#bbb';
+				var taskAllState ={
+					'1':'待接收',
+					'2':'作业现场勘察',
+					'3':'安全器具待确认',
+					'4':'工作班组选择',
+					'5':'工作票待确认',
+					'6':'操作票待确认',
+					'6.5':'作业人员验证',
+					'7':'班前会',
+					'8':'停送电待确认',
+					'9':'作业准备开始',
+					'0':'现场作业结束',
+					'10':'作业进行中',
+					'11':'作业准备结束',
+					'12':'待作业总结',
+					'13':'待作业评价',
+					'14':'任务结束',
+				}//全部状态
+				var currentTab = '1'//判断当前tab
+                
+				currentInfoAndTime()
+				//页面增加当前用户，和时间
+				function currentInfoAndTime(){
+				    var str = '<ul class="mui-table-view">'+
+				    '<li class="mui-table-view-cell">当前用户： '+userInfo.name+'</li>'+
+				    '<li class="mui-table-view-cell">当前时间： '+ getNowDate()+ '</li>'+
+				   '</ul>'
+				    $('.mui-content').prepend(str)
+				}
+				
+				//下拉刷新
+				function pullDownfresh(){
+					mui('#refreshContainer').pullRefresh().refresh(true);
+					setTimeout(()=>{
+						getStausList(currentTab);
+						mui('#refreshContainer').pullRefresh().endPulldownToRefresh(true);
+						mui('#refreshContainer').pullRefresh().scrollTo(0,0,100)
+					},2000)
+				}
+			
+				//获取指定状态列表			
+				function getStausList(index){
+					var statusList = []
+					mui.ajax(httpUrl+'/task/getList/v2',{
+							data:{
+								username:userInfo.username,
+								queryType:index
+							},
+							dataType:'json',//服务器返回json格式数据
+							type:'post',//HTTP请求类型
+							timeout:10000,//超时时间设置为10秒；
+							headers:{'Content-Type':'application/json'},	              
+							success:function(res){
+								if(res.code == 0){
+									var dataList = res.data.data || []
+									for (let i = 0; i < dataList.length; i++) {
+										statusList.push(dataList[i].record)
+									}
+									var innerli = '';
+									for (let i = 0; i < statusList.length; i++) {
+										if(userInfo.role == '2'){
+											innerli+= '<li class="mui-table-view-cell" num="'+statusList[i].num+'" status="'+statusList[i].status+'"> <a class="mui-navigate-right"><span class="task-li">'+ statusList[i].name +'</span><span class="mui-badge mui-badge-primary mui-badge-inverted">'+taskAllState[statusList[i].status]+'</span></a></li>'
+										}else{
+											innerli+= '<li class="mui-table-view-cell" num="'+statusList[i].num+'" status="'+statusList[i].status+'"> <a class="mui-navigate-right"><span class="task-li">'+ statusList[i].name +'</span><span class="mui-badge mui-badge-primary mui-badge-inverted">'+(statusList[i].status == '2' ? '风险待确认' : taskAllState[statusList[i].status])+'</span></a></li>'
+										}
+									}
+									if(index == '1'){
+										mui('#count1')[0].innerText = '('+ (res.data.count || 0 )+')'
+										mui('#taskList')[0].innerHTML = innerli || '<li class="mui-table-view-cell" style="text-align:center"> <span>暂无数据</span></li>';
+									}else if(index == '2'){
+										mui('#count2')[0].innerText = '('+ (res.data.count || 0 )+')'
+										mui('#taskList2')[0].innerHTML = innerli || '<li class="mui-table-view-cell" style="text-align:center"> <span>暂无数据</span></li>';
+									}else  if(index == '3'){
+										mui('#count3')[0].innerText = '('+ (res.data.count || 0 )+')'
+										mui('#taskList3')[0].innerHTML = innerli || '<li class="mui-table-view-cell" style="text-align:center"> <span>暂无数据</span></li>';
+									}
+								}else{
+									mui('#taskList')[0].innerHTML =	'<li class="mui-table-view-cell" style="text-align:center"> <span>暂无数据</span></li>'
+									mui('#taskList2')[0].innerHTML =	'<li class="mui-table-view-cell" style="text-align:center"> <span>暂无数据</span></li>'
+									mui('#taskList3')[0].innerHTML =	'<li class="mui-table-view-cell" style="text-align:center"> <span>暂无数据</span></li>'
+									mui.toast(res.msg);
+								}
+							
+							},
+							error:function(xhr,type,errorThrown){
+								mui('#taskList')[0].innerHTML =	'<li class="mui-table-view-cell" style="text-align:center"> <span>暂无数据</span></li>'
+								mui('#taskList2')[0].innerHTML =	'<li class="mui-table-view-cell" style="text-align:center"> <span>暂无数据</span></li>'
+								mui('#taskList3')[0].innerHTML =	'<li class="mui-table-view-cell" style="text-align:center"> <span>暂无数据</span></li>'
+								mui.toast("服务异常，请稍后再试！");
+								//异常处理；
+								console.log(type);
+							}
+					});
+				}
+				
+				function getAllList(){
+					taskList = []
+					mui.ajax(httpUrl+'/task/getList',{
+							data:{
+								username:userInfo.username,
+							},
+							dataType:'json',//服务器返回json格式数据
+							type:'post',//HTTP请求类型
+							timeout:10000,//超时时间设置为10秒；
+							headers:{'Content-Type':'application/json'},	              
+							success:function(res){
+								if(res.code == 0){
+									for (let i = 0; i < res.data.length; i++) {
+										taskList.push(res.data[i].record)
+									}
+								}
+							},
+							error:function(xhr,type,errorThrown){
+								//异常处理；
+								console.log(type);
+							}
+					});
+				}
+				//搜索
+				document.getElementById("search").addEventListener('input',function(){
+					var lis = [];
+					if(lis.length>0){
+						for (let i = 0; i < taskList.length; i++) {
+							for (let j = 0; j < lis.length; j++) {
+								if(taskList[i].name.includes(this.value)&&lis[j].num!=taskList[i].num){
+									lis.push(taskList[i])
+								}
+							}
+						}
+					}else{
+						for (let i = 0; i < taskList.length; i++) {
+							if(taskList[i].name.includes(this.value)){
+								lis.push(taskList[i])
+							}
+						}
+					}
+					if(lis.length>0&&this.value){
+						mui('.tabs-list')[0].style.display='none'
+						mui('.taskListall')[0].style.display= 'block'
+						taskShowList(lis,1)
+					}else if(lis.length == 0 &&!this.value){
+						mui('.tabs-list')[0].style.display='block'
+						mui('.taskListall')[0].style.display= 'none'
+						getStausList(currentTab);
+					}else if(lis.length == 0 &&this.value){
+						mui('.tabs-list')[0].style.display='none'
+						mui('.taskListall')[0].style.display= 'block'
+						mui('#taskListall')[0].innerHTML = '<li class="mui-table-view-cell" style="text-align:center"> <span>暂无数据</span></li>'
+					}else{
+					    mui('.tabs-list')[0].style.display='block'
+					    mui('.taskListall')[0].style.display= 'none'
+					    getStausList(currentTab);
+				    }
+					
+                });
+				
+				
+				//展示状态
+				function taskShowList(taskLi,index){
+					var innerli = '';
+					for (let i = 0; i < taskLi.length; i++) {
+						if(userInfo.role == '2'){
+							innerli+= '<li class="mui-table-view-cell" num="'+taskLi[i].num+'" status="'+taskLi[i].status+'"> <a class="mui-navigate-right"><span class="task-li">'+ taskLi[i].name +'</span><span class="mui-badge mui-badge-primary mui-badge-inverted">'+taskAllState[taskLi[i].status]+'</span></a></li>'
+						}else{
+							innerli+= '<li class="mui-table-view-cell" num="'+taskLi[i].num+'" status="'+taskLi[i].status+'"> <a class="mui-navigate-right"><span class="task-li">'+ taskLi[i].name +'</span><span class="mui-badge mui-badge-primary mui-badge-inverted">'+(statusList[i].status == '2' ? '风险待确认' :taskAllState[taskLi[i].status])+'</span></a></li>'
+						}
+					}
+					if(index){
+						mui('#taskListall')[0].innerHTML = innerli || '<li class="mui-table-view-cell" style="text-align:center"> <span>暂无数据</span></li>';
+					}
+				}
+
+				//切换tabs
+				mui('.task-tab').on('tap', 'span', function(e) {
+					for(var i = 0; i<mui(this)[0].parentNode.children.length;i++){
+						mui(this)[0].parentNode.children[i]['style'].backgroundColor = ''
+					}
+					mui(this)[0]['style'].backgroundColor = '#bbb';
+					currentTab = mui(this)[0].id.slice(-1) || '1'
+					getStausList(currentTab)
+					if(currentTab == '1'){
+						mui('#taskList2')[0].style.display= 'none';
+				        mui('#taskList3')[0].style.display= 'none';
+				        mui('#taskList')[0].style.display= 'block';
+					}else if(currentTab == '2'){
+						mui('#taskList2')[0].style.display= 'block';
+				        mui('#taskList3')[0].style.display= 'none';
+				        mui('#taskList')[0].style.display= 'none';
+					}else if(currentTab == '3'){
+						mui('#taskList2')[0].style.display= 'none';
+				        mui('#taskList3')[0].style.display= 'block';
+				        mui('#taskList')[0].style.display= 'none';
+					}
+				})
+				//点击列表
+				mui("#taskList").on('tap','li',function(){
+					var number = mui(this)[0].attributes[1].value;
+					var taskState = mui(this)[0].attributes[2].value;
+					// console.log(taskState,number)
+                    routerStatus(taskState,number)
+				})
+				//点击列表
+				mui("#taskList2").on('tap','li',function(){
+					var number = mui(this)[0].attributes[1].value;
+					var taskState = mui(this)[0].attributes[2].value;
+					console.log(taskState,number)
+                    routerStatus(taskState,number)
+				})
+				//点击列表
+				mui("#taskList3").on('tap','li',function(){
+					var number = mui(this)[0].attributes[1].value;
+					var taskState = mui(this)[0].attributes[2].value;
+                    routerStatus(taskState,number)
+				})
+				//点击搜索出来的列表
+				mui("#taskListall").on('tap','li',function(){
+					var number = mui(this)[0].attributes[1].value;
+					var taskState = mui(this)[0].attributes[2].value;
+                    routerStatus(taskState,number)
+				})
+				var roleone = {
+					'1':'./taskDetails.html?num=',
+					'2':'./riskSafe.html?num=',
+					'3':'../common/taskInformation.html?num=',
+					'4':'../common/taskInformation.html?num=',
+					'5':'./workTicket.html?num=',
+					'6':'../common/taskInformation.html?num=',
+					'6.5':'../common/taskInformation.html?num=',
+					'7':'../common/taskInformation.html?num=',
+					'8':'../common/taskInformation.html?num=',
+					'9':'../common/taskInformation.html?num=',
+					'10':'../common/taskInformation.html?num=',
+					'11':'../common/taskInformation.html?num=',
+					'12':'../common/taskInformation.html?num=',
+					'13':'../common/taskInformation.html?num=',
+					'14':'../common/taskInformation.html?num=',
+					'0':'../common/taskInformation.html?num=',
+				}
+				var roleSecond = {
+					'1':'./taskDetails.html?num=',
+					'2':'./survey.html?num=',
+					'3':'./getTools.html?num=',
+					'4':'./selectedPerson.html?num=',
+					'5':'./workTicket.html?num=',
+					'6':'./operationOrder.html?num=',
+					'6.5':'./beforeClassVerify.html?num=',
+					'7':'./beforeClassConfirm.html?num=',
+					'8':'../common/taskInformation.html?num=',
+					'9':'../taskControlStage/workStart.html?num=',
+					'10':'../taskControlStage/AIWarning.html?num=',
+					'11':'../taskControlStage/AIEndRemind.html?num=',
+					'0':'../taskAnalyseStage/afterClassMetting.html?num=',
+					'12':'../taskAnalyseStage/operationalProblem.html?num=',
+					'13':'../taskAnalyseStage/workEvaluate.html?num=',
+					'14':'../common/taskInformation.html?num=',
+				}
+				var roleThird = {
+					'1':'./taskDetails.html?num=',
+					'2':'./riskSafe.html?num=',
+					'3':'../common/taskInformation.html?num=',
+					'4':'../common/taskInformation.html?num=',
+					'5':'./workTicket.html?num=',
+					'6':'../common/taskInformation.html?num=',
+					'6.5':'../common/taskInformation.html?num=',
+					'7':'../common/taskInformation.html?num=',
+					'8':'./powerCut.html?num=',
+					'9':'../common/taskInformation.html?num=',
+					'10':'../common/taskInformation.html?num=',
+					'11':'../common/taskInformation.html?num=',
+					'12':'../common/taskInformation.html?num=',
+					'13':'../common/taskInformation.html?num=',
+					'14':'../common/taskInformation.html?num=',
+					'0':'../common/taskInformation.html?num=',
+				}
+				//跳转路由
+				function  routerStatus(taskState,number){
+					if(userInfo.role == '1'){
+						if(roleone[taskState]){
+							mui.openWindow({
+								   url:roleone[taskState]+number, /*获取任务作业-page*/
+								   createNew: true,
+								   styles: {
+										cachemode:"noCache",
+									}
+							});
+						}else{
+							mui.toast('正在等待其他任务责任人进行相关操作')
+						}
+					}else if(userInfo.role == '2'){
+						if(roleSecond[taskState]){
+							mui.openWindow({
+								   url:roleSecond[taskState]+number, /*获取任务作业-page*/
+								   createNew: true,
+								   styles: {
+										cachemode:"noCache",
+									}
+							});
+						}else{
+							mui.toast('正在等待其他任务责任人进行相关操作')
+						}
+						
+					}else if(userInfo.role == '3'){
+						if(roleThird[taskState]){
+							mui.openWindow({
+								   url:roleThird[taskState]+number, /*获取任务作业-page*/
+								   createNew: true,
+								   styles: {
+										cachemode:"noCache",
+									}
+							});
+						}else{
+							mui.toast('正在等待其他任务责任人进行相关操作')
+						}
+					}
+				}
+				setTimeout(function(){
+					getAllList();
+					mui('#taskList2')[0].style.display= 'block';
+					mui('#taskList3')[0].style.display= 'none';
+					mui('#taskList')[0].style.display= 'none';
+					mui('#taskList2')[0].innerHTML = ''
+					getStausList('2')
+					getStausList('3')
+					getStausList('1')
+				},1000);
+
+		</script>
+	</body>
+
+</html>
